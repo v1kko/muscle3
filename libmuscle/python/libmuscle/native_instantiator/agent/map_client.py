@@ -6,9 +6,9 @@ import msgpack
 from libmuscle.mcp.protocol import AgentCommandType, RequestType, ResponseType
 from libmuscle.mcp.tcp_transport_client import TcpTransportClient
 from libmuscle.native_instantiator.agent.agent_commands import (
-        AgentCommand, StartCommand, CancelAllCommand, ShutdownCommand)
+        AgentCommand, AddMonitorCommand, StartCommand, CancelAllCommand, 
+        ShutdownCommand)
 from libmuscle.planner.resources import OnNodeResources
-
 
 class MAPClient:
     """The client for the MUSCLE Agent Protocol.
@@ -67,6 +67,9 @@ class MAPClient:
             stderr = Path(command[6])
 
             return StartCommand(name, workdir, args, env, stdout, stderr)
+        
+        elif command[0] == AgentCommandType.ADD_MONITOR.value:
+            return AddMonitorCommand(command[1], command[2], command[3])
 
         elif command[0] == AgentCommandType.CANCEL_ALL.value:
             return CancelAllCommand()
