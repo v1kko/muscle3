@@ -16,6 +16,7 @@ from libmuscle.logging import LogLevel
 from libmuscle.logging_handler import MuscleManagerHandler
 from libmuscle.mpp_message import ClosePort
 from libmuscle.mmp_client import MMPClient
+from libmuscle.mlp_client import MLPClient
 from libmuscle.mmsf_validator import MMSFValidator
 from libmuscle.peer_info import PeerInfo
 from libmuscle.port_manager import PortManager
@@ -136,13 +137,17 @@ class Instance:
         self.__manager = MMPClient(self._instance_id, mmp_location)
         """Client object for talking to the manager."""
 
+        mlp_location = self.__extract_mlp_location()
+        self.__mlp_client = MLPClient(mlp_location, self._instance_id)
+        """Client object for talking to the manager."""
+
         self.__set_up_logging()
 
         self._api_guard = APIGuard(
                 InstanceFlags.USES_CHECKPOINT_API in self._flags)
         """Checks that the user uses the API correctly."""
 
-        self._profiler = Profiler(self.__manager)
+        self._profiler = Profiler(self.__mlp_client)
         """Profiler for this instance."""
 
         self._port_manager = PortManager(self._index, ports)
@@ -796,6 +801,14 @@ class Instance:
                 return arg[len(prefix):]
 
         return os.environ.get('MUSCLE_MANAGER', 'tcp:localhost:9000')
+
+    def __extract_mlp_location(self) -> Optional[str]:
+        """Gets the MLPServer location from the manager.
+
+        Returns:
+            A connection string, or None.
+        """
+        return self.__manager.get_mlp_location()
 
     def __set_up_logging(self) -> None:
         """Adds logging handlers for one or more instances.

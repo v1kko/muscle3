@@ -89,8 +89,9 @@ class Manager:
         self._server = MMPServer(
                 self._logger, self._profile_store, self._configuration,
                 self._instance_registry, self._topology_store,
-                self._snapshot_registry, self._deadlock_detector, run_dir,
-                instance_manager=self._instance_manager)
+                self._snapshot_registry, self._deadlock_detector, 
+                self._mlp_server.get_location(),
+                instance_manager=self._instance_manager, run_dir=run_dir)
 
         if self._instance_manager:
             self._instance_manager.set_manager_location(

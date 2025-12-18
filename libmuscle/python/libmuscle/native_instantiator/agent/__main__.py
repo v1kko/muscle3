@@ -36,7 +36,8 @@ class Agent:
         _logger.info(f'Connecting to manager at {server_location}')
         self._server = MAPClient(self._node_name, server_location)
         _logger.info('Connected to manager')
-        self._mlpclient = MLPClient(self._node_name, mlp_location)
+        self._mlpclient = MLPClient(mlp_location)
+        _logger.info('Connected to Muscle Logging Protocol server')
 
     def run(self) -> None:
         """Execute commands and monitor processes."""
@@ -72,7 +73,7 @@ class Agent:
                 self._server.report_result(finished)
 
             if not shutting_down and not finished:
-                self._mlpclient.report_usage(self._monitor_pids, _logger)
+                self._mlpclient.report_usage(self._monitor_pids, self._node_name, _logger)
 
             sleep(0.1)
 

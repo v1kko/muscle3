@@ -337,6 +337,13 @@ class MMPClient():
         response = self._call_manager(request)
         return bool(response[1])
 
+    def get_mlp_location(self) -> str:
+        """Ask the manager for the location of the MLP server."""
+        request = [
+                RequestType.GET_MLP_LOCATION.value, str(self._instance_id)]
+        response = self._call_manager(request)
+        return response[1]
+
     def _call_manager(self, request: Any, timid: bool = False) -> Any:
         """Call the manager and do en/decoding.
 

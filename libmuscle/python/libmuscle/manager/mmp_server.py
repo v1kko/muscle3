@@ -80,8 +80,9 @@ class MMPRequestHandler(RequestHandler):
             topology_store: TopologyStore,
             snapshot_registry: SnapshotRegistry,
             deadlock_detector: DeadlockDetector,
-            run_dir: Optional[RunDir],
+            mlp_location: str,
             instance_manager: Optional[InstanceManager] = None,
+            run_dir: Optional[RunDir] = None,
             ) -> None:
         """Create an MMPRequestHandler.
 
@@ -101,6 +102,7 @@ class MMPRequestHandler(RequestHandler):
         self._run_dir = run_dir
         self._reference_time = time.monotonic()
         self._instance_manager = instance_manager
+        self._mlp_location = mlp_location
 
     def handle_request(self, request: bytes) -> bytes:
         """Handles a manager request.
@@ -136,6 +138,8 @@ class MMPRequestHandler(RequestHandler):
             response = self._waiting_for_receive_done(*req_args)
         elif req_type == RequestType.IS_DEADLOCKED.value:
             response = self._is_deadlocked(*req_args)
+        elif req_type == RequestType.GET_MLP_LOCATION.value:
+            response = [ResponseType.SUCCESS.value, self._mlp_location]
 
         return cast(bytes, msgpack.packb(response, use_bin_type=True))
 
@@ -425,8 +429,9 @@ class MMPServer:
             topology_store: TopologyStore,
             snapshot_registry: SnapshotRegistry,
             deadlock_detector: DeadlockDetector,
-            run_dir: Optional[RunDir],
-            instance_manager: Optional[InstanceManager]
+            mlp_location: str,
+            instance_manager: Optional[InstanceManager],
+            run_dir: Optional[RunDir]
             ) -> None:
         """Create an MMPServer.
 
@@ -448,8 +453,8 @@ class MMPServer:
         """
         self._handler = MMPRequestHandler(
                 logger, profile_store, configuration, instance_registry,
-                topology_store, snapshot_registry, deadlock_detector, run_dir,
-                instance_manager=instance_manager)
+                topology_store, snapshot_registry, deadlock_detector, mlp_location,
+                instance_manager=instance_manager, run_dir=run_dir)
         try:
             self._server = TcpTransportServer(self._handler, 9000)
         except OSError as e:

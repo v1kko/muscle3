@@ -22,6 +22,8 @@ class RequestType(Enum):
     SUBMIT_PROFILE_EVENTS = 6
     SUBMIT_SNAPSHOT = 7
     GET_CHECKPOINT_INFO = 8
+    GET_MLP_LOCATION = 12
+
     # Connection deadlock detection
     WAITING_FOR_RECEIVE = 9
     WAITING_FOR_RECEIVE_DONE = 10

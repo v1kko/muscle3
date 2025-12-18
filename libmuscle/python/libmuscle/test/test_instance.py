@@ -27,11 +27,18 @@ def MMPClient():
                 MagicMock(), checkpoints, MagicMock(), MagicMock()]
         yield MMPClient
 
+@pytest.fixture(autouse=True)
+def MLPClient():
+    with patch('libmuscle.instance.MLPClient') as MLPClient:
+        yield MLPClient
 
 @pytest.fixture
 def mmp_client(MMPClient):
     return MMPClient.return_value
 
+@pytest.fixture
+def mlp_client(MLPClient):
+    return MLPClient.return_value
 
 @pytest.fixture
 def api_guard():

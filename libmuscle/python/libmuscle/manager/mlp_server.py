@@ -3,7 +3,7 @@ import logging
 from typing import Any, Dict, List, Tuple, cast
 
 import msgpack
-from ymmsl import Reference
+from ymmsl import Reference, Operator, Port
 
 from libmuscle.manager.logger import Logger
 from libmuscle.manager.profile_store import ProfileStore
@@ -47,6 +47,8 @@ class MLPRequestHandler(RequestHandler):
         req_args = req_list[1:]
         if req_type == RequestType.REPORT_USAGE.value:
             response = self._report_usage_events(*req_args)
+        elif req_type == RequestType.SUBMIT_PROFILE_EVENTS.value:
+            response = self._submit_profile_events(*req_args)
 
         return cast(bytes, msgpack.packb(response, use_bin_type=True))
 
@@ -60,7 +62,7 @@ class MLPRequestHandler(RequestHandler):
 
     def _report_usage_events(
             self, node_name: str, usage: Dict[str, Tuple[float, int]]) -> Any:
-        """Handle a submit usage events request.
+        """Handle a report usage events request.
 
         Args:
             node_name: Name of the node that sent these events
@@ -82,6 +84,30 @@ class MLPRequestHandler(RequestHandler):
         for event in events:
             self._profile_store.add_event(Reference(event[0]), event[1])
 
+        return [ResponseType.SUCCESS.value]
+
+    def _submit_profile_events(
+            self, instance_id: str, events: List[List[Any]]) -> Any:
+        """Handle a submit profile events request.
+
+        Args:
+            instance_id: Instance that sent these events
+            events: Profiling events to store
+
+        Returns:
+            A list containing the following values on success:
+
+            status (ResponseType): SUCCESS
+        """
+        ev = [
+                ProfileEvent(
+                    ProfileEventType(e[0]), ProfileTimestamp(e[1]),
+                    ProfileTimestamp(e[2]),
+                    Port(e[3][0], Operator[e[3][1]]) if e[3] else None,
+                    e[4], e[5], e[6], e[7], e[8])
+                for e in events]
+
+        self._profile_store.add_events(Reference(instance_id), ev)
         return [ResponseType.SUCCESS.value]
 
 

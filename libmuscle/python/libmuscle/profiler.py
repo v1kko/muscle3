@@ -1,9 +1,9 @@
 from random import uniform
 from threading import Condition, Lock, Thread
 import time
-from typing import List
+from typing import List, Optional
 
-from libmuscle.mmp_client import MMPClient
+from libmuscle.mlp_client import MLPClient
 from libmuscle.profiling import ProfileEvent, ProfileTimestamp
 
 
@@ -13,7 +13,7 @@ _COMMUNICATION_INTERVAL = 10.0  # seconds
 class Profiler:
     """Collects profiling events and sends them to the manager.
     """
-    def __init__(self, manager: MMPClient) -> None:
+    def __init__(self, manager: MLPClient) -> None:
         """Create a Profiler.
 
         Args:

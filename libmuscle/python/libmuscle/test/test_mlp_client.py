@@ -7,15 +7,14 @@ from libmuscle.mlp_client import MLPClient
 
 def test_create_mlp_client():
     with patch('libmuscle.mlp_client.TcpTransportClient') as mock_ttc:
-        client = MLPClient('node_name', 'location')
-        assert client._node_name == 'node_name'
+        client = MLPClient('location')
         assert client._transport_client == mock_ttc.return_value
         mock_ttc.assert_called_with('location')
 
 
 def test_close_mlp_client():
     with patch('libmuscle.mlp_client.TcpTransportClient'):
-        client = MLPClient('node_name', 'location')
+        client = MLPClient('location')
         client.close()
         client._transport_client.close.assert_called_once()
 
@@ -23,7 +22,7 @@ def test_close_mlp_client():
 def test_report_usage():
     with patch('libmuscle.mlp_client.TcpTransportClient') as mock_ttc:
         mock_ttc.return_value.call.return_value = (msgpack.packb([0]), None)
-        client = MLPClient('node_name', 'location')
+        client = MLPClient('location')
 
         with patch('libmuscle.mlp_client.psutil') as mock_psutil:
             mock_process = MagicMock()
@@ -32,7 +31,7 @@ def test_report_usage():
             mock_psutil.Process.return_value = mock_process
 
             logger = MagicMock()
-            client.report_usage([('instance1', 123)], logger)
+            client.report_usage([('instance1', 123)], 'node_name', logger)
 
             mock_psutil.Process.assert_called_with(123)
             mock_process.cpu_percent.assert_called()
@@ -50,22 +49,22 @@ def test_report_usage():
 
 def test_report_usage_no_pids():
     with patch('libmuscle.mlp_client.TcpTransportClient'):
-        client = MLPClient('node_name', 'location')
+        client = MLPClient('location')
         logger = MagicMock()
-        client.report_usage([], logger)
+        client.report_usage([], 'node_name', logger)
         client._transport_client.call.assert_not_called()
 
 
 def test_report_usage_process_not_found():
     with patch('libmuscle.mlp_client.TcpTransportClient'):
-        client = MLPClient('node_name', 'location')
+        client = MLPClient('location')
 
         with patch('libmuscle.mlp_client.psutil') as mock_psutil:
             mock_psutil.Process.side_effect = Exception('Process not found')
             mock_psutil.NoSuchProcess = Exception
 
             logger = MagicMock()
-            client.report_usage([('instance1', 123)], logger)
+            client.report_usage([('instance1', 123)], 'node_name', logger)
 
             client._transport_client.call.assert_not_called()
             logger.debug.assert_called()

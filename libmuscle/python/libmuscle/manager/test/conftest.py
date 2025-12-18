@@ -59,14 +59,18 @@ def snapshot_registry(mmp_configuration, topology_store) -> SnapshotRegistry:
 def deadlock_detector() -> DeadlockDetector:
     return DeadlockDetector()
 
+@pytest.fixture
+def mlp_location() -> str:
+    return 'tcp:localhost:9001'
+
 
 @pytest.fixture
 def mmp_request_handler(
         logger, profile_store, mmp_configuration, instance_registry,
-        topology_store, snapshot_registry, deadlock_detector):
+        topology_store, snapshot_registry, deadlock_detector, mlp_location):
     return MMPRequestHandler(
             logger, profile_store, mmp_configuration, instance_registry,
-            topology_store, snapshot_registry, deadlock_detector, None)
+            topology_store, snapshot_registry, deadlock_detector, mlp_location, instance_manager=None, run_dir=None)
 
 
 @pytest.fixture
@@ -83,10 +87,10 @@ def loaded_instance_registry(instance_registry):
 @pytest.fixture
 def registered_mmp_request_handler(
         logger, profile_store, mmp_configuration, loaded_instance_registry,
-        topology_store, snapshot_registry, deadlock_detector):
+        topology_store, snapshot_registry, deadlock_detector, mlp_location):
     return MMPRequestHandler(
             logger, profile_store, mmp_configuration, loaded_instance_registry,
-            topology_store, snapshot_registry, deadlock_detector, None)
+            topology_store, snapshot_registry, deadlock_detector, mlp_location, instance_manager=None, run_dir=None)
 
 
 @pytest.fixture
@@ -139,8 +143,8 @@ def loaded_instance_registry2():
 @pytest.fixture
 def registered_mmp_request_handler2(
         logger, profile_store, mmp_configuration, loaded_instance_registry2,
-        topology_store2, snapshot_registry2, deadlock_detector, tmp_path):
+        topology_store2, snapshot_registry2, deadlock_detector, tmp_path, mlp_location):
     return MMPRequestHandler(
             logger, profile_store, mmp_configuration,
             loaded_instance_registry2, topology_store2, snapshot_registry2,
-            deadlock_detector, RunDir(tmp_path))
+            deadlock_detector, mlp_location, instance_manager=None, run_dir=RunDir(tmp_path))
