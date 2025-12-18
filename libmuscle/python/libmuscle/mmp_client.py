@@ -15,7 +15,6 @@ from ymmsl import (
 import libmuscle
 from libmuscle.mcp.protocol import RequestType, ResponseType
 from libmuscle.mcp.tcp_transport_client import TcpTransportClient
-from libmuscle.profiling import ProfileEvent
 from libmuscle.logging import LogMessage
 from libmuscle.snapshot import SnapshotMetadata
 
@@ -29,39 +28,13 @@ PEER_INTERVAL_MAX = 10.0
 _CheckpointInfoType = Tuple[
         float, Checkpoints, Optional[Path], Optional[Path]]
 
-
 def encode_operator(op: Operator) -> str:
     """Convert an Operator to a MsgPack-compatible value."""
     return op.name
 
-
 def encode_port(port: Port) -> List[str]:
     """Convert a Port to a MsgPack-compatible value."""
     return [str(port.name), encode_operator(port.operator)]
-
-
-def encode_profile_event(event: ProfileEvent) -> Any:
-    """Converts a ProfileEvent to a list.
-
-    Args:
-        event: A profile event
-
-    Returns:
-        A list with its attributes, for MMP serialisation.
-    """
-    if event.start_time is None or event.stop_time is None:
-        raise RuntimeError(
-                'Incomplete ProfileEvent sent. This is a bug, please'
-                ' report it.')
-
-    encoded_port = encode_port(event.port) if event.port else None
-    return [
-            event.event_type.value,
-            event.start_time.nanoseconds, event.stop_time.nanoseconds,
-            encoded_port, event.port_length, event.slot,
-            event.message_number, event.message_size, event.message_timestamp,
-            event.cpu_percent, event.memory_usage]
-
 
 def decode_checkpoint_rule(rule: Dict[str, Any]) -> CheckpointRule:
     """Decode a checkpoint rule from a MsgPack-compatible value."""
@@ -173,18 +146,6 @@ class MMPClient():
                 message.instance_id, message.timestamp.seconds,
                 message.level.value, message.text]
         self._call_manager(request, True)
-
-    def submit_profile_events(self, events: Iterable[ProfileEvent]) -> None:
-        """Sends profiling events to the manager.
-
-        Args:
-            events: The events to send.
-        """
-        request = [
-                RequestType.SUBMIT_PROFILE_EVENTS.value,
-                str(self._instance_id),
-                [encode_profile_event(e) for e in events]]
-        self._call_manager(request)
 
     def submit_snapshot_metadata(
             self, snapshot_metadata: SnapshotMetadata) -> None:

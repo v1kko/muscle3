@@ -43,16 +43,16 @@ def profile_data() -> ProfileData:
 
 @pytest.fixture
 def mocked_profiler():
-    class MockMMPClient:
+    class MockMLPClient:
         def __init__(self):
             self.sent_events = None
 
         def submit_profile_events(self, events):
             self.sent_events = copy(events)
 
-    mock_mmp_client = MockMMPClient()
-    profiler = Profiler(mock_mmp_client)
-    yield profiler, mock_mmp_client
+    mock_mlp_client = MockMLPClient()
+    profiler = Profiler(mock_mlp_client)
+    yield profiler, mock_mlp_client
     profiler.shutdown()
 
 

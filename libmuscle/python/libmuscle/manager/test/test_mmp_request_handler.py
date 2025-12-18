@@ -14,10 +14,10 @@ from libmuscle.snapshot import SnapshotMetadata
 
 
 def test_create_servicer(
-        logger, profile_store, mmp_configuration, instance_registry,
+        logger, mmp_configuration, instance_registry,
         topology_store, snapshot_registry, deadlock_detector):
     MMPRequestHandler(
-            logger, profile_store, mmp_configuration, instance_registry,
+            logger, mmp_configuration, instance_registry,
             topology_store, snapshot_registry, deadlock_detector, None)
 
 

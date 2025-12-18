@@ -19,7 +19,6 @@ from libmuscle.manager.topology_store import TopologyStore
 from libmuscle.mcp.protocol import RequestType, ResponseType
 from libmuscle.mcp.tcp_transport_server import TcpTransportServer
 from libmuscle.mcp.transport_server import RequestHandler
-from libmuscle.manager.profile_store import ProfileStore
 from libmuscle.manager.deadlock_detector import DeadlockDetector
 from libmuscle.profiling import (
         ProfileEvent, ProfileEventType, ProfileTimestamp)
@@ -74,7 +73,6 @@ class MMPRequestHandler(RequestHandler):
     def __init__(
             self,
             logger: Logger,
-            profile_store: ProfileStore,
             configuration: PartialConfiguration,
             instance_registry: InstanceRegistry,
             topology_store: TopologyStore,
@@ -93,7 +91,6 @@ class MMPRequestHandler(RequestHandler):
             topology_store: Keeps track of how to connect things.
         """
         self._logger = logger
-        self._profile_store = profile_store
         self._configuration = configuration
         self._instance_registry = instance_registry
         self._topology_store = topology_store
@@ -126,8 +123,6 @@ class MMPRequestHandler(RequestHandler):
             response = self._get_settings(*req_args)
         elif req_type == RequestType.SUBMIT_LOG_MESSAGE.value:
             response = self._submit_log_message(*req_args)
-        elif req_type == RequestType.SUBMIT_PROFILE_EVENTS.value:
-            response = self._submit_profile_events(*req_args)
         elif req_type == RequestType.SUBMIT_SNAPSHOT.value:
             response = self._submit_snapshot(*req_args)
         elif req_type == RequestType.GET_CHECKPOINT_INFO.value:
@@ -142,14 +137,6 @@ class MMPRequestHandler(RequestHandler):
             response = [ResponseType.SUCCESS.value, self._mlp_location]
 
         return cast(bytes, msgpack.packb(response, use_bin_type=True))
-
-    def close(self) -> None:
-        """Free per-thread resources.
-
-        On shutdown of the server, this will be called by each server
-        thread before it shuts down.
-        """
-        self._profile_store.close()
 
     def _register_instance(
             self, instance_id: str, locations: List[str],
@@ -308,30 +295,6 @@ class MMPRequestHandler(RequestHandler):
                 instance_id, Timestamp(timestamp), LogLevel(level), text)
         return [ResponseType.SUCCESS.value]
 
-    def _submit_profile_events(
-            self, instance_id: str, events: List[List[Any]]) -> Any:
-        """Handle a submit profile events request.
-
-        Args:
-            instance_id: Instance that sent these events
-            events: Profiling events to store
-
-        Returns:
-            A list containing the following values on success:
-
-            status (ResponseType): SUCCESS
-        """
-        ev = [
-                ProfileEvent(
-                    ProfileEventType(e[0]), ProfileTimestamp(e[1]),
-                    ProfileTimestamp(e[2]),
-                    Port(e[3][0], Operator[e[3][1]]) if e[3] else None,
-                    e[4], e[5], e[6], e[7], e[8])
-                for e in events]
-
-        self._profile_store.add_events(Reference(instance_id), ev)
-        return [ResponseType.SUCCESS.value]
-
     def _submit_snapshot(
             self, instance_id: str, snapshot: Dict[str, Any]) -> Any:
         """Handle a submit snapshot request.
@@ -423,7 +386,6 @@ class MMPServer:
     def __init__(
             self,
             logger: Logger,
-            profile_store: ProfileStore,
             configuration: PartialConfiguration,
             instance_registry: InstanceRegistry,
             topology_store: TopologyStore,
@@ -442,7 +404,6 @@ class MMPServer:
 
         Args:
             logger: Logger to send log messages to
-            profile_store: ProfileStore to store profile data in
             configuration: Configuration component to get settings, checkpoints
                 and resumes from
             instance_registry: To register instances with and get
@@ -452,7 +413,7 @@ class MMPServer:
             run_dir: To save snapshots to
         """
         self._handler = MMPRequestHandler(
-                logger, profile_store, configuration, instance_registry,
+                logger, configuration, instance_registry,
                 topology_store, snapshot_registry, deadlock_detector, mlp_location,
                 instance_manager=instance_manager, run_dir=run_dir)
         try:

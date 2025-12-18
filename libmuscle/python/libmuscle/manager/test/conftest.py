@@ -34,13 +34,6 @@ def mmp_configuration():
 
 
 @pytest.fixture
-def profile_store(tmp_path):
-    test_profile_store = ProfileStore(tmp_path)
-    yield test_profile_store
-    test_profile_store.shutdown()
-
-
-@pytest.fixture
 def instance_registry():
     return InstanceRegistry()
 
@@ -66,10 +59,10 @@ def mlp_location() -> str:
 
 @pytest.fixture
 def mmp_request_handler(
-        logger, profile_store, mmp_configuration, instance_registry,
+        logger, mmp_configuration, instance_registry,
         topology_store, snapshot_registry, deadlock_detector, mlp_location):
     return MMPRequestHandler(
-            logger, profile_store, mmp_configuration, instance_registry,
+            logger, mmp_configuration, instance_registry,
             topology_store, snapshot_registry, deadlock_detector, mlp_location, instance_manager=None, run_dir=None)
 
 
@@ -86,10 +79,10 @@ def loaded_instance_registry(instance_registry):
 
 @pytest.fixture
 def registered_mmp_request_handler(
-        logger, profile_store, mmp_configuration, loaded_instance_registry,
+        logger, mmp_configuration, loaded_instance_registry,
         topology_store, snapshot_registry, deadlock_detector, mlp_location):
     return MMPRequestHandler(
-            logger, profile_store, mmp_configuration, loaded_instance_registry,
+            logger, mmp_configuration, loaded_instance_registry,
             topology_store, snapshot_registry, deadlock_detector, mlp_location, instance_manager=None, run_dir=None)
 
 
@@ -142,9 +135,9 @@ def loaded_instance_registry2():
 
 @pytest.fixture
 def registered_mmp_request_handler2(
-        logger, profile_store, mmp_configuration, loaded_instance_registry2,
+        logger, mmp_configuration, loaded_instance_registry2,
         topology_store2, snapshot_registry2, deadlock_detector, tmp_path, mlp_location):
     return MMPRequestHandler(
-            logger, profile_store, mmp_configuration,
+            logger, mmp_configuration,
             loaded_instance_registry2, topology_store2, snapshot_registry2,
             deadlock_detector, mlp_location, instance_manager=None, run_dir=RunDir(tmp_path))

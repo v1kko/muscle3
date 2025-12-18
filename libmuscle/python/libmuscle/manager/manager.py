@@ -87,7 +87,7 @@ class Manager:
         self._snapshot_registry.start()
 
         self._server = MMPServer(
-                self._logger, self._profile_store, self._configuration,
+                self._logger, self._configuration,
                 self._instance_registry, self._topology_store,
                 self._snapshot_registry, self._deadlock_detector, 
                 self._mlp_server.get_location(),
